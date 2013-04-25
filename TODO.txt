@@ -1,0 +1,3 @@
+Plans:
+Separate HTTP/S/FTP (libcurl), HTML parsing, and rendering which will be split into three separate parts: font rendering (xft), image (libim2), and document rendering (xcb).
+Do everything in that order.
