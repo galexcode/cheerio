@@ -77,6 +77,7 @@ void gettagtext(char *doc, page *dom) {
 	if(*doc != '/') {
 		parsetag(doc, dom); //fucking recurse, uhgggg!!!!	
 	}
+
 	return;
 }
 

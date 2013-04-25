@@ -1,3 +1,21 @@
 Plans:
-Separate HTTP/S/FTP (libcurl), HTML parsing, and rendering which will be split into three separate parts: font rendering (xft), image (libim2), and document rendering (xcb).
+Separate HTTP/S/FTP (libcurl), HTML parsing, element typesetting, and rendering which will be split into three separate parts: font rendering (xft), image (libim2), and document rendering (xcb).
 Do everything in that order.
+
+Tomorrow:
+Problem:
+Parsing tags like this: <h1>hi<h2>ho</h2>merry</h1> are troublesome. 
+Test solution:
+Run html code through your head to see if it will work. 
+Plan of attack:
+Create another ilist item, same type as element popped into.
+Example:
+create ilist item
+in h1	
+	create ilist item
+	in h2
+	pop out of h2
+back in h1
+if there is more text,
+	create ilist item
+	store it
