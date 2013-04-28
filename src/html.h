@@ -1,8 +1,12 @@
-static enum { 
-	START_END_TAG,
-	START_TAG_END,
-	TAG_TYPES
-};
+#include "dom.h"
+
+page * parseHTML(char *doc);
+char * readattributes(char *doc, ilist *curr);
+char * gettagtext(char *doc, page *dom);
+char * gstrd(char *s, char d, char *data);
+char * parsetag(char *doc, page *dom);
+void storeattr(attr *a, char *key, char *value);
+
 static const int elements = 116;
 static const char *element[] = {
 "a",

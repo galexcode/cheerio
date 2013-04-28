@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 typedef struct page page;
-typedef struct item item;
+typedef struct ilist ilist;
 typedef struct attr attr;
 
 struct page {
