@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "html.h"
 
 page * parseHTML(char *doc) {
@@ -19,13 +20,13 @@ page * parseHTML(char *doc) {
 char * parsetag(char *doc, page *dom) {
 	char tag[12];
 	char *tdoc = NULL;
-	int c;
+	unsigned int c = 0;
 
 	if(*doc == '<') {
 		doc++;
 		dom->curr->nitem = (ilist *)malloc(sizeof(ilist));
 		dom->curr = dom->curr->nitem;
-		for(c = 0; *doc != '>' || !*doc; doc++, c++) {
+		for(c = 0; *doc != '>' && *doc != ' '; doc++, c++) {
 			if(c >= 11)
 				break; //encountered fucked up tag, skip
 			tag[c] = tolower(*doc);
@@ -39,9 +40,13 @@ char * parsetag(char *doc, page *dom) {
 		for(c = 0; c < elements; c++) {
 			if(strcmp(element[c], tag) == 0) {
 				dom->curr->type = c;
-				if((tdoc = readattributes(doc, dom->curr)) != NULL)
+				tdoc = readattributes(doc, dom->curr);
+				if(tdoc != NULL) {
 					doc = tdoc;
 					doc = gettagtext(doc, dom);
+				} else {
+					doc++;
+				}
 				break;
 			}
 		}
@@ -56,7 +61,7 @@ char * readattributes(char *doc, ilist *curr) {
 	if(*doc == '/')
 		return NULL;
 	if(*doc == '>')
-		return NULL;
+		return doc;
 
 	char *data;
 	char *attr;
@@ -64,10 +69,11 @@ char * readattributes(char *doc, ilist *curr) {
 	doc++;
 	for(; *doc != '>' || !*doc; doc++) {
 		if(*doc != ' ') {
-			doc = gstrd(attr, '=', doc);
+			doc--;
+			doc = gstrd(&attr, '=', doc);
 			doc+=2;
-			doc = gstrd(data, '"', doc);
-			storeattr(curr->a, attr, data);
+			doc = gstrd(&data, '"', doc);
+			storeattr(&curr->a, attr, data);
 			free(attr);
 			free(data);
 		}
@@ -77,24 +83,34 @@ char * readattributes(char *doc, ilist *curr) {
 
 char * gettagtext(char *doc, page *dom) {
 	ilist tmp = {.type = dom->curr->type};
-	doc = gstrd(dom->curr->a->innerhtml, '<', doc);
+	doc = gstrd(&dom->curr->a->innerhtml, '<', doc);
 	doc++;
+
 	if(*doc != '/') {
-		doc = parsetag(doc, dom); //fucking recurse, uhgggg!!!!	
-		if(*doc != '<') {
-			dom->curr->nitem = (ilist *)malloc(sizeof(ilist));
-			dom->curr = dom->curr->nitem;
-			dom->curr->type = tmp.type;
-			dom->curr->a = (attr *)malloc(sizeof(attr));
-			doc = gettagtext(doc, dom);
-			return doc;
-		}
+		doc--;
+		doc = parsetag(doc, dom);
+		printf("tmp.type=%s\n", element[tmp.type]);
+		dom->curr->nitem = (ilist *)malloc(sizeof(ilist));
+		dom->curr = dom->curr->nitem;
+		dom->curr->type = tmp.type;
+		dom->curr->a = (attr *)malloc(sizeof(attr));
+		doc = gettagtext(doc, dom);
+		doc = skiptext(doc, '>');
 	}
-	doc += strlen(element[dom->curr->type])+1;
+
+	if(*(doc-1) != '/')
+		doc = skiptext(doc, '>');
+
 	return doc;
 }
 
-void storeattr(attr *a, char *key, char *value) {
+char * skiptext(char *data, char d) {
+	for(; *data != d; data++);
+	return data;
+}
+
+void storeattr(attr **a, char *key, char *value) {
+	printf("ATTR: %s\n", key);
 	if(strcmp(key, "type") == 0) {
 	} else if(strcmp(key, "src") == 0) {
 	} else if(strcmp(key, "alt") == 0) {
@@ -105,6 +121,8 @@ void storeattr(attr *a, char *key, char *value) {
 	} else if(strcmp(key, "height") == 0) {
 	} else if(strcmp(key, "id") == 0) {
 	} else if(strcmp(key, "class") == 0) {
+		printf("CLASS: %s\n",value);
+		(*a)->class = value;
 	} else if(strcmp(key, "title") == 0) {
 	}
 }
@@ -112,27 +130,35 @@ void storeattr(attr *a, char *key, char *value) {
 /*
  * Counts characters until the specified delimiter d. Then mallocs
  * space needed and assigns s the pointer. Increments the data pointer.
- * Returns the characters put in s.
+ * Returns the characters put in s. Skips over newlines.
  */
-char * gstrd(char *s, char d, char *data) {
+char * gstrd(char **s, char d, char *data) {
 	int datasize = 0;
 	int c;
-	for(; *data != d || !*data; data++) {
+
+	if(*data == '\0')
+		return data;
+
+	for(; *data != d && *data != '\0'; data++) {
 		datasize++;
 		if(*data == '\n')
 			datasize--;
 	}
-	datasize--;
-	s = (char *)malloc(sizeof(char)*datasize+1);
-	data -= datasize;
-	if(datasize > 0) {
-		for(c = 0; *data != d || !*data; data++, c++) {
-			if(*data != '\n')
-				s[c] = tolower(*data);
-		}
-	} else {
-		s[0] = '\0';
+
+	if(datasize == 0) {
+		**s = '\0';
+		return data;
 	}
+
+	datasize--;
+	*s = (char *)malloc(sizeof(char)*datasize+1);
+	data -= datasize;
+
+	for(c = 0; *data != d && *data != '\0'; data++, c++) {
+		if(*data != '\n')
+			*(*s+c) = *data;
+	}
+	*(*s+datasize) = '\0';
 
 	return data;
 }

@@ -18,9 +18,13 @@ int main(int argc, char *argv[]) {
 	for(;dom->curr != NULL; dom->curr = dom->curr->nitem) {
 		if(dom->curr->type >= 0 && dom->curr->type < elements) {
 			printf("%s\n", element[dom->curr->type]);
-			if(dom->curr->a != NULL)
+			if(dom->curr->a != NULL) {
 				if(dom->curr->a->innerhtml != NULL)
-					printf("\t%s\n", dom->curr->a->innerhtml);
+					printf("\tINNERHTML:%s\n", dom->curr->a->innerhtml);
+				if(dom->curr->a->innerhtml != NULL)
+					printf("\tCLASS:%s\n", dom->curr->a->class);
+			}
+			printf("\n");
 		}
 	}
 	return 0;

@@ -3,9 +3,10 @@
 page * parseHTML(char *doc);
 char * readattributes(char *doc, ilist *curr);
 char * gettagtext(char *doc, page *dom);
-char * gstrd(char *s, char d, char *data);
+char * gstrd(char **s, char d, char *data);
 char * parsetag(char *doc, page *dom);
-void storeattr(attr *a, char *key, char *value);
+char * skiptext(char *doc, char d);
+void storeattr(attr **a, char *key, char *value);
 
 static const int elements = 116;
 static const char *element[] = {
